@@ -185,5 +185,115 @@ if(employee.isEligibleForFullBenefits())
 ```java
 
 ```
+# Chapater11 系统
+## Java代理
+```java
+public interface Bank {
+    Collection<Account> getAccounts();
+    void setAccounts(Collection<Account> accounts);
+}
+
+public class BankImpl implements Bank {
+
+    private List<Account> accounts;
+
+    @Override
+    public Collection<Account> getAccounts() {
+        return accounts;
+    }
+
+    @Override
+    public void setAccounts(Collection<Account> accounts) {
+        this.accounts = new ArrayList<>();
+        this.accounts.addAll(accounts);
+    }
+}
+```
+```java
+public class BankProxyHandler implements InvocationHandler {
+
+    private Bank bank;
+
+    public BankProxyHandler(Bank bank) {
+        this.bank = bank;
+    }
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        String methodName = method.getName();
+        if (methodName.equals("getAccounts")) {
+            bank.setAccounts(getAccountsFromDatabase());
+            return bank.getAccounts();
+        } else if (methodName.equals("setAccounts")) {
+            bank.setAccounts((Collection<Account>)args[0]);
+            setAccountsToDatabase(bank.getAccounts());
+        }
+        return null;
+    }
+
+    private Collection<Account> getAccountsFromDatabase() {...}
+
+    private void setAccountsToDatabase(Collection<Account> accounts){...}
+}
+```
+```java
+Bank bank = (Bank) Proxy.newProxyInstance(
+                Bank.class.getClassLoader(),
+                new Class[]{Bank.class},
+                new BankProxyHandler(new BankImpl()));
+```
+# Chapater12 迭进
+Kent Beck关于简单设计的四条规则（按重要程度排列）：
+- 运行所有测试
+- 不可重复
+- 表达了程序员的意图
+- 尽可能减少类和方法的数量
+## 不可重复
+```java
+public class VacationPolicy {
+    public void accrueUsDivisionVacation() {
+        // code to calculate vacation based on hours worked to date
+        // ...
+        // code to ensure vacation meets US minimums
+        // ...
+        // code to apply vacation to payroll record
+        // ...
+    }
+    public void accrueEUDivisionVacation() {
+        // code to calculate vacation based on hours worked to date
+        // ...
+        // code to ensure vacation meets EU minimums
+        // ...
+        // code to apply vacation to payroll record
+        // ...
+    }
+}
+```
+```java
+public abstract class VavationPolicy {
+    public void accrueVacation() {
+        calculateBaseVacationHours();
+        alterForLegalMinimums();
+        applyToPayroll();
+    }
+    private calculateBaseVacationHours(){...}
+    abstract protected void alterForLegalMinimums();
+    private void applyToPayroll(){...}
+}
+
+public class USVacationPolicy extends VacationPolicy {
+    @Override protected void alterForLegalMinimums(){
+        // US specific logic
+    }
+}
+
+public class EUVacationPolicy extends VacationPolicy {
+    @Override protected void alterForLegalMinimums(){
+        // EU specific logic
+    }
+}
+```
+# Chapater13 并发编程
+
 
 
